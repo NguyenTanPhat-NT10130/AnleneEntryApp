@@ -12,7 +12,7 @@ import GradientText from '../components/GradientText';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/Navigation';
 
-type BodyTestScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Welcome'>;
+type BodyTestScreenNavigationProp = StackNavigationProp<RootStackParamList, 'BodyTest'>;
 
 type Props = {
   navigation: BodyTestScreenNavigationProp;

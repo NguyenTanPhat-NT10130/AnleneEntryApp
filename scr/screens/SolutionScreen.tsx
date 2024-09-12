@@ -8,6 +8,7 @@ import GradientWrapper from '../components/GradientWrapper';
 import { commonStyles } from '../components/styles';
 import WarningGradient from '../components/WarningGradient';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Text as SvgText, TSpan } from 'react-native-svg';
+
 const Solution: React.FC = () => {
     const [isExpanded, setIsExpanded] = useState(false);
     const animation = useRef(new Animated.Value(0)).current;
