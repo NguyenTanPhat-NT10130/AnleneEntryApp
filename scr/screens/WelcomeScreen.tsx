@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Button, Alert, TouchableOpacity, ImageBackground, Image } from 'react-native';
 import { Icon } from 'react-native-elements';
-import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Text as SvgText, TSpan } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import GradientWrapper from '../components/GradientWrapper';
@@ -11,6 +10,7 @@ import GradientText from '../components/GradientText';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/Navigation';
 import { commonStyles } from '../components/styles';
+import * as Font from 'expo-font';
 
 type WelcomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Welcome'>;
 
@@ -18,7 +18,30 @@ type Props = {
   navigation: WelcomeScreenNavigationProp;
 };
 
+
+
 const Welcome: React.FC<Props> = ({ navigation }) => {
+
+  const textLines = [
+    { text: 'TẾT BẬN RỘN', fontSize: 22, fontWeight: '700' },
+    { text: 'CƠ-XƯƠNG-KHỚP CÓ KHOẺ', fontSize: 22, fontWeight: '700' },
+    { text: 'ĐỂ CHU TOÀN?', fontSize: 22, fontWeight: '700' }
+  ];
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    async function loadFonts() {
+      await Font.loadAsync({
+        'SVN-Gotham Bold': require('../../assets/fonts/SVN-Gotham Bold.ttf'),
+      });
+      setFontsLoaded(true);
+    }
+    loadFonts();
+  }, []);
+
+  if (!fontsLoaded) {
+    return null; // Hoặc một màn hình loading nào đó
+  }
   const handlePress = () => {
     Alert.alert('Button pressed!');
   };
@@ -62,7 +85,7 @@ const Welcome: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
         <View style={styles.title}>
-          <GradientText textLines={['TẾT BẬN RỘN', 'CƠ-XƯƠNG-KHỚP CÓ KHOẺ', 'ĐỂ CHU TOÀN?']} />
+          <GradientText textLines={textLines} />
           <View style={styles.box_content_title}>
             <Text style={[styles.content_title, { paddingHorizontal: wp('2%') }]}>
               Trăm công nghìn việc dịp cận Tết mà cơ thể nhức mỏi, làm sao chu toàn?
@@ -84,14 +107,18 @@ const Welcome: React.FC<Props> = ({ navigation }) => {
           resizeMode="contain"
         />
       </View>
-      <GradientWrapper borderWidth={1.5} borderRadius={30.24} style={styles.button_wrap}>
-        <TouchableOpacity
+      <TouchableOpacity
         onPress={() => navigation.navigate('BodyTest')}
-          style={styles.customButton}
-        >
-          <Text style={styles.buttonText}>KIỂM TRA NGAY</Text>
-        </TouchableOpacity>
-      </GradientWrapper>
+        style={{ position: 'absolute' }}
+      >
+        <GradientWrapper borderWidth={1.5} borderRadius={30.24} style={styles.button_wrap}>
+          <View
+            style={styles.customButton}
+          >
+            <Text style={styles.buttonText}>KIỂM TRA NGAY</Text>
+          </View>
+        </GradientWrapper>
+      </TouchableOpacity>
       <LinearGradient
         colors={[
           'rgba(46, 130, 13, 0)', // Màu cuối cùng của LinearGradient 1 thành màu đầu tiên
@@ -106,20 +133,35 @@ const Welcome: React.FC<Props> = ({ navigation }) => {
       >
         <View>
           <View style={styles.voucher_container}>
-            <GradientBorder borderWidth={1.4} borderRadius={18}>
+            <GradientBorder borderWidth={1.4} borderRadius={18} style={{marginRight: wp('4%')}}>
               <GradientWrapper borderWidth={1} borderRadius={18} style={styles.voucher_box}>
-                <Text style={styles.voucher_text}>MIỄN PHÍ</Text>
+                <ImageBackground 
+                source={require('../../assets/Free.png')}
+                resizeMode="contain"
+                style={styles.voucher_border}
+                >
+                  <Text style={styles.voucher_text}>MIỄN PHÍ</Text>
+                </ImageBackground>
+              </GradientWrapper>
+            </GradientBorder>
+            <GradientBorder borderWidth={1.4} borderRadius={18} style={{marginRight: wp('4%')}}>
+              <GradientWrapper borderWidth={1} borderRadius={18} style={styles.voucher_box}>
+                <View style={styles.voucher_border}>
+                  <Text style={styles.voucher_text}>Chỉ 5 phút</Text>
+                </View>
               </GradientWrapper>
             </GradientBorder>
             <GradientBorder borderWidth={1.4} borderRadius={18}>
               <GradientWrapper borderWidth={1} borderRadius={18} style={styles.voucher_box}>
-                <Text style={styles.voucher_text}>Chỉ 5 phút</Text>
-              </GradientWrapper>
-            </GradientBorder>
-            <GradientBorder borderWidth={1.4} borderRadius={18}>
-              <GradientWrapper borderWidth={1} borderRadius={18} style={styles.voucher_box}>
-                <Text style={[styles.voucher_text, {fontSize: 8.34}]}>Voucher</Text>
-                <Text style={[styles.voucher_text, {fontSize: 15.21}]}>100K</Text>
+              <ImageBackground 
+                 source={require('../../assets/voucher.png')}
+                 resizeMode="contain"
+                 style={styles.voucher_border}
+                >
+                  <Text style={[styles.voucher_text, { fontSize: 8.34 }]}>Voucher</Text>
+                  <Text style={[styles.voucher_text, { fontSize: 15.21 }]}>100K</Text>
+                </ImageBackground>
+
               </GradientWrapper>
             </GradientBorder>
           </View>
@@ -198,7 +240,7 @@ const styles = StyleSheet.create({
     color: '#ECD24A',
     fontWeight: 'bold',
   },
-  image_box:{
+  image_box: {
     height: hp('35%'), // Chiếm 40% chiều cao màn hình làm khoảng trống
     justifyContent: 'center',
     alignItems: 'center',
@@ -211,10 +253,9 @@ const styles = StyleSheet.create({
     position: 'absolute', // Cho phép hình ảnh vượt qua các LinearGradient
     top: hp('-17%'), // 20% Điều chỉnh vị trí của hình ảnh cho hiệu ứng fade-in từ trên xuống
     zIndex: -1,  // Đặt hình ảnh phía sau các phần tử khác
-    
+
   },
   button_wrap: {
-    position: 'absolute',
     top: hp('71%'),
     shadowColor: '#00000040',  // Màu shadow với opacity 25%
     shadowOffset: { width: 1.16, height: 1.16 },  // Độ lệch của shadow
@@ -242,22 +283,30 @@ const styles = StyleSheet.create({
   },
   voucher_container: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     width: wp('67%'),
     bottom: hp('1.5%'),
   },
   voucher_box: {
-    width: wp('25%'),
+    width: wp('23%'), //28
     height: hp('8%'),
     textAlign: 'center',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+  },
+  voucher_border: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: wp('17%')
   },
   voucher_text: {
     color: '#478449',
-    fontWeight: 'bold',
+    fontFamily: 'SVN-Gotham Bold',
+    fontWeight: '700',
     fontSize: 14,
-    textAlign: 'center'
+    textAlign: 'center',
+    paddingHorizontal: wp('3%')
   },
   bottom_wrap: {
     top: hp('1%'),
@@ -268,7 +317,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     color: 'white',
-    fontStyle: 'italic'
+    fontStyle: 'italic',
+    fontFamily: 'SVN-Gotham Bold'
   },
   overlay: {
     padding: 20,

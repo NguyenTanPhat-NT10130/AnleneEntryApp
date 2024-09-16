@@ -8,8 +8,16 @@ import GradientWrapper from '../components/GradientWrapper';
 import { commonStyles } from '../components/styles';
 import WarningGradient from '../components/WarningGradient';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Text as SvgText, TSpan } from 'react-native-svg';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/Navigation';
 
-const Solution: React.FC = () => {
+type SolutionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Solution'>;
+
+type Props = {
+  navigation: SolutionScreenNavigationProp;
+};
+
+const Solution: React.FC<Props> = ({navigation}) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const animation = useRef(new Animated.Value(0)).current;
     const handlePresstExpanded = () => {
@@ -17,7 +25,7 @@ const Solution: React.FC = () => {
         if (isExpanded) {
             // Thu gọn text
             Animated.timing(animation, {
-                toValue: 0,
+                toValue: isExpanded ? 0 : 8,
                 duration: 300,
                 useNativeDriver: false, // Không nên dùng nativeDriver với chiều cao
             }).start();
@@ -32,8 +40,8 @@ const Solution: React.FC = () => {
         setIsExpanded(!isExpanded);
     };
     const maxHeight = animation.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 200], // Chiều cao tối đa của đoạn text đầy đủ (tùy chỉnh)
+        inputRange: [0, 8],
+        outputRange: [0, 500], // Chiều cao tối đa của đoạn text đầy đủ (tùy chỉnh)
     });
     const handlePressLeft = () => {
         Alert.alert('Button pressed!');
@@ -45,15 +53,15 @@ const Solution: React.FC = () => {
         Alert.alert('Button pressed!');
     };
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-<ScrollView>
+        <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+
             <CustomResultGradient
                 backgroundType="color"
                 backgroundColor="#969696"
                 style={commonStyles.linearGradient}
             >
-                
-                    <View style={commonStyles.header}>
+                <ScrollView>
+                    <View style={[commonStyles.header, {marginBottom: hp('-1%')}, isExpanded && {marginBottom: hp('6%')}]}>
                         <ReusableScreenHeader
                             currentPage="4"
                             totalPages="6"
@@ -65,7 +73,8 @@ const Solution: React.FC = () => {
                             pageMobileStyle={{ marginBottom: hp('0%'), left: wp('0%') }} // Ghi đè style page_mobile 
                         />
                     </View>
-                    <View style={{ bottom: hp('2.5%'), alignItems: 'center', }}>
+                    
+                    <View style={{ /*bottom: hp('2.5%'), 7*/ marginBottom: hp('7%'), alignItems: 'center', }}>
                         <Image
                             source={require('../../assets/logo.png')}
                             style={styles.logo}
@@ -75,7 +84,7 @@ const Solution: React.FC = () => {
                             <Text style={styles.warning_text}>
                                 HÃY CẨN THẬN!
                             </Text>
-                            <Text style={[styles.warning_contenttext, { top: hp('3%') }]}>
+                            <Text style={[styles.warning_contenttext, { /*top: hp('3%')*/ marginTop: hp('0%') }]}>
                                 Tuy rằng có vẻ bạn đang có đề kháng tốt nhưng cần quan tâm đến hệ vận động nhiều hơn nhé, bởi sau tuổi 40, sức khoẻ Cơ-Xương-Khớp{'         '}suy giảm:
                             </Text>
                         </View>
@@ -117,13 +126,13 @@ const Solution: React.FC = () => {
                                 </WarningGradient>
                             </View>
                         </View>
-                        <View style={{ top: hp('6%') }}>
+                        <View style={{ /*top: hp('6%'), marginTop 1, 48*/ marginTop: hp('48%'), position: 'absolute' }}>
                             <Text style={[
                                 styles.warning_contenttext,
                                 {
                                     fontSize: 12,
                                     lineHeight: 16.14,
-                                    paddingHorizontal: wp('8.8%')
+                                    paddingHorizontal: wp('11%')// 8.8
                                 }
                             ]}>
                                 Bạn có thể sẽ phải đối mặt với những cơn đau nhức mỏi thường xuyên, gây khó khăn trong vận động và sinh hoạt hằng ngày.
@@ -177,39 +186,40 @@ const Solution: React.FC = () => {
                                     </SvgText>
                                 </Svg>
                             </View>
-                            <View style={styles.bottom_box}>
+                            <View style={[styles.bottom_box, isExpanded && styles.expanded_bottom_box]}>
                                 <Text style={styles.bottom_text}>
                                     Đừng chậm trễ, cùng Anlene giúp bạn chăm sóc sức khoẻ Cơ-Xương-Khớp ngay hôm nay với Ưu đãi hấp dẫn đang chờ bạn!
                                 </Text>
                                 {isExpanded ? (
-                                    <Animated.View style={{ maxHeight }}>
+                                    <Animated.View style={{ maxHeight, marginTop: hp('0%')  }}>
                                         <Text style={[styles.bottom_expand]}>
                                             *Anlene 3 Khoẻ với công thức MovePro chứa các dưỡng chất Đạm, Canxi, Collagen cùng các Vitamin, Khoáng chất giúp
                                             Cơ-Xương-Khớp chắc khỏe và tăng sức đề kháng, cho bạn thoải mái vận động, tận hưởng cuộc sống.
                                         </Text>
                                         <TouchableOpacity onPress={handlePresstExpanded}>
-                                            <Text style={styles.bottom_text}>Thu gọn</Text>
+                                            <Text style={[styles.bottom_text, {marginTop: hp('0%') }]}>Thu gọn</Text>
                                         </TouchableOpacity>
                                     </Animated.View>
                                 ) : (
                                     <TouchableOpacity onPress={handlePresstExpanded}>
-                                        <Text style={[styles.bottom_text, { color: '#ECD24A' }]}>Xem thêm</Text>
+                                        <Text style={[styles.bottom_text, { color: '#ECD24A'}]}>Xem thêm</Text>
                                     </TouchableOpacity>
                                 )}
                             </View>
                         </View>
                     </View>
-                    <GradientWrapper borderWidth={1.5} borderRadius={24} style={styles.button_wrap}>
-                        <TouchableOpacity
-                            // onPress={() => navigation.navigate('BodyTest')}
-                            style={styles.customButton}
-                        >
-                            <Text style={styles.buttonText}>NHẬN NGAY</Text>
-                        </TouchableOpacity>
-                    </GradientWrapper>
-                
+                    <View style={{alignItems: 'center', justifyContent: 'center'}}>
+                        <GradientWrapper borderWidth={1.5} borderRadius={24} style={[styles.button_wrap, isExpanded && styles.button_expand]}>
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate('Voucher')}
+                                style={styles.customButton}
+                            >
+                                <Text style={styles.buttonText}>NHẬN NGAY</Text>
+                            </TouchableOpacity>
+                        </GradientWrapper>
+                    </View>
+                </ScrollView>
             </CustomResultGradient>
-            </ScrollView>
         </SafeAreaView>
     )
 }
@@ -218,12 +228,16 @@ const styles = StyleSheet.create({
     logo: {
         width: wp('24.6%'),// 88
         height: hp('6%'), //33
-        top: hp('3%'),
+        // top: hp('3%'),
+        marginTop: hp('6%'), // 6
+        position: 'absolute'
     },
     warning_box:
     {
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        position: 'absolute',
+        marginTop: hp('12%') // 10
     },
     warning_text: {
         color: '#DF1E13',
@@ -231,7 +245,8 @@ const styles = StyleSheet.create({
         fontSize: 24,
         lineHeight: 36,
         fontWeight: '700',
-        top: hp('3%')
+        // top: hp('3%')
+        marginBottom: hp('0%')
     },
     warning_contenttext: {
         color: '#FFFFFF',
@@ -245,12 +260,17 @@ const styles = StyleSheet.create({
     image_wrapp: {
         flexDirection: 'row',
         width: '100%',
-        top: hp('5%')
+        // top: hp('5%')
+        marginTop: hp('28%'), // 1, 28
+        // position: 'absolute',
+
+
     },
     image_box: {
         paddingLeft: wp('3%'),
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        
     },
     image: {
         width: wp('24%'), //86
@@ -279,9 +299,11 @@ const styles = StyleSheet.create({
         fontWeight: '600'
     },
     product_image_container: {
-        top: hp('6%'),
+        // top: hp('6%'),
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        position: 'absolute',
+        marginTop: hp('53%') // 44
     },
     product_image: {
         width: 282,
@@ -290,7 +312,8 @@ const styles = StyleSheet.create({
     note_text: {
         width: 189,
         height: 26.87,
-        bottom: hp('2%')
+        // bottom: hp('2%')
+        marginTop: hp('-2%')// -2
 
     },
     first_note_text: {
@@ -312,7 +335,8 @@ const styles = StyleSheet.create({
     bottom_container: {
         alignItems: 'center',
         justifyContent: 'center',
-        top: hp('1%')
+        // top: hp('1%')
+        marginTop: hp('29%')// -4, 61.5
 
     },
     bottom_gradient_text: {
@@ -324,9 +348,16 @@ const styles = StyleSheet.create({
     },
     bottom_box: {
         width: 340,
-        height: 68,
+        height: 68, // 68
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    expanded_bottom_box: {
+        width: 340,
+        height: 68, // 68
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: hp('2.5%')
     },
     bottom_text:
     {
@@ -335,8 +366,9 @@ const styles = StyleSheet.create({
         fontSize: 12,
         lineHeight: 16.14,
         textAlign: 'center',
-        paddingHorizontal: wp('5%')
+        paddingHorizontal: wp('5%'),
     },
+
     bottom_expand: {
         color: '#FFFFFF',
         fontWeight: '400',
@@ -347,8 +379,22 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp('5%')
     },
     button_wrap: {
-        position: 'absolute',
-        top: hp('93%'), // 93, top
+        // position: 'absolute',
+        // top: hp('93%'), // 93, top
+        width: wp('40%'),
+        marginTop: hp('-7%'),// -7, -15
+        shadowColor: '#00000040',  // Màu shadow với opacity 25%
+        shadowOffset: { width: 1.16, height: 1.16 },  // Độ lệch của shadow
+        shadowOpacity: 1,  // Độ mờ của shadow
+        shadowRadius: 1.16,  // Bán kính làm mờ shadow
+        elevation: 3,  // Thuộc tính dành riêng cho Android để hiển thị shadow,
+
+    },
+    button_expand: {
+        // position: 'absolute',
+        // top: hp('93%'), // 93, top
+        width: wp('40%'),
+        marginTop: hp('-2%'),// -2
         shadowColor: '#00000040',  // Màu shadow với opacity 25%
         shadowOffset: { width: 1.16, height: 1.16 },  // Độ lệch của shadow
         shadowOpacity: 1,  // Độ mờ của shadow

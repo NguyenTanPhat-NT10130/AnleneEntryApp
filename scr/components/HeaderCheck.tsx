@@ -42,7 +42,12 @@ const ReusableScreenHeader: React.FC<ReusableScreenHeaderProps> = ({
         page_mobileStyle={pageMobileStyle}
       />
       <View style={[styles.box_icon, boxIconStyle]}>
-        <TouchableOpacity onPress={onPressHome}>
+        <TouchableOpacity onPress={() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Welcome' }],
+          });
+        }}>
           <Icon name='home' size={30} type='material' color='#FFFFFF' />
         </TouchableOpacity>
       </View>

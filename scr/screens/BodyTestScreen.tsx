@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Button, Alert, TouchableOpacity, ImageBackground, Image } from 'react-native';
 import { Icon } from 'react-native-elements';
-import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Text as SvgText, TSpan } from 'react-native-svg';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { ScrollView } from 'react-native-virtualized-view';
 import CheckGradient from '../components/CheckGradient';
@@ -18,7 +17,10 @@ type Props = {
   navigation: BodyTestScreenNavigationProp;
 };
 
-const BodyTest: React.FC<Props> = ({navigation}) => {
+const BodyTest: React.FC<Props> = ({ navigation }) => {
+  const textLines = [
+    { text: 'KIỂM TRA CƠ', fontSize: 18, fontWeight: '700' },
+  ];
   const handlePressLeft = () => {
     Alert.alert('Button pressed!');
   };
@@ -52,43 +54,37 @@ const BodyTest: React.FC<Props> = ({navigation}) => {
         <ProgressStepsComponent />
       </View>
       <View style={styles.gradientText_container}>
-        <GradientText textLines={['KIỂM TRA CƠ']} />
+        <GradientText textLines={textLines} />
       </View>
       <View style={styles.check_image_container}>
-      <ImageBackground
-        source={require('../../assets/gifit_1725640797338.gif')}
-        style={styles.check_image} 
-      />
+        <ImageBackground
+          source={require('../../assets/gifit_1725640797338.gif')}
+          style={styles.check_image}
+        />
       </View>
       <Text style={styles.checkText_content}>Thẳng lưng trước ghế, đứng lên ngồi xuống 5 lần từ 6-10 giây</Text>
       <View style={styles.check_container}>
         <TouchableOpacity style={styles.check_box}>
-          <Icon
-            name="emotsmile"
-            type="simple-line-icon"
-            size={44}
-            color="#FFFFFF"
-            backgroundColor='#478449'
-            borderRadius={30}
+          <Image
+            source={require('../../assets/smile_face.png')}
+            style={styles.image_icon}
+            resizeMode="contain"
           />
           <Text style={styles.check_text}>Được</Text>
         </TouchableOpacity>
         <Text>{'       '}</Text>
         <TouchableOpacity style={styles.check_box}>
-          <Icon
-            name='frowno'
-            size={44}
-            type='antdesign'
-            backgroundColor='#E23F30'
-            color='#FFFFFF'
-            borderRadius={40}
+        <Image
+            source={require('../../assets/sad_face.png')}
+            style={styles.image_icon}
+            resizeMode="contain"
           />
           <Text style={styles.check_text}>Không được</Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity 
-      onPress={() => navigation.navigate('TestResults')}
-      style={styles.confirm_btn}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('TestResults')}
+        style={styles.confirm_btn}
       >
         <Text style={styles.confirm_text}>XÁC NHẬN</Text>
       </TouchableOpacity>
@@ -144,6 +140,10 @@ const styles = StyleSheet.create({
     borderRadius: 10.29,
 
   },
+  image_icon: {
+    width: 44,
+    height: 44
+  },
   check_text: {
     color: 'white',
     fontSize: 16,
@@ -166,11 +166,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   note_text: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#FFFFFF',
     textAlign: 'center',
     lineHeight: 13,
-    paddingHorizontal: wp('8%'),
+    paddingHorizontal: wp('10%'),
     top: hp('5%')
   },
   check_image_container: {
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   {
     height: hp('27.9%'),
   }
-  
+
 
 });
 
