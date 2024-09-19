@@ -14,10 +14,10 @@ import { RootStackParamList } from '../navigation/Navigation';
 type SolutionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Solution'>;
 
 type Props = {
-  navigation: SolutionScreenNavigationProp;
+    navigation: SolutionScreenNavigationProp;
 };
 
-const Solution: React.FC<Props> = ({navigation}) => {
+const Solution: React.FC<Props> = ({ navigation }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const animation = useRef(new Animated.Value(0)).current;
     const handlePresstExpanded = () => {
@@ -61,7 +61,7 @@ const Solution: React.FC<Props> = ({navigation}) => {
                 style={commonStyles.linearGradient}
             >
                 <ScrollView>
-                    <View style={[commonStyles.header, {marginBottom: hp('-1%')}, isExpanded && {marginBottom: hp('6%')}]}>
+                    <View style={[commonStyles.header, { marginBottom: hp('-1%') }, isExpanded && { marginBottom: hp('6%') }]}>
                         <ReusableScreenHeader
                             currentPage="4"
                             totalPages="6"
@@ -73,7 +73,7 @@ const Solution: React.FC<Props> = ({navigation}) => {
                             pageMobileStyle={{ marginBottom: hp('0%'), left: wp('0%') }} // Ghi đè style page_mobile 
                         />
                     </View>
-                    
+
                     <View style={{ /*bottom: hp('2.5%'), 7*/ marginBottom: hp('7%'), alignItems: 'center', }}>
                         <Image
                             source={require('../../assets/logo.png')}
@@ -191,33 +191,35 @@ const Solution: React.FC<Props> = ({navigation}) => {
                                     Đừng chậm trễ, cùng Anlene giúp bạn chăm sóc sức khoẻ Cơ-Xương-Khớp ngay hôm nay với Ưu đãi hấp dẫn đang chờ bạn!
                                 </Text>
                                 {isExpanded ? (
-                                    <Animated.View style={{ maxHeight, marginTop: hp('0%')  }}>
+                                    <Animated.View style={{ maxHeight, marginTop: hp('0%') }}>
                                         <Text style={[styles.bottom_expand]}>
                                             *Anlene 3 Khoẻ với công thức MovePro chứa các dưỡng chất Đạm, Canxi, Collagen cùng các Vitamin, Khoáng chất giúp
                                             Cơ-Xương-Khớp chắc khỏe và tăng sức đề kháng, cho bạn thoải mái vận động, tận hưởng cuộc sống.
                                         </Text>
                                         <TouchableOpacity onPress={handlePresstExpanded}>
-                                            <Text style={[styles.bottom_text, {marginTop: hp('0%') }]}>Thu gọn</Text>
+                                            <Text style={[styles.bottom_text, { marginTop: hp('0%') }]}>Thu gọn</Text>
                                         </TouchableOpacity>
                                     </Animated.View>
                                 ) : (
                                     <TouchableOpacity onPress={handlePresstExpanded}>
-                                        <Text style={[styles.bottom_text, { color: '#ECD24A'}]}>Xem thêm</Text>
+                                        <Text style={[styles.bottom_text, { color: '#ECD24A' }]}>Xem thêm</Text>
                                     </TouchableOpacity>
                                 )}
                             </View>
                         </View>
                     </View>
-                    <View style={{alignItems: 'center', justifyContent: 'center'}}>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('Voucher')}
+                        style={{ alignItems: 'center', justifyContent: 'center' }}
+                    >
                         <GradientWrapper borderWidth={1.5} borderRadius={24} style={[styles.button_wrap, isExpanded && styles.button_expand]}>
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate('Voucher')}
+                            <View
                                 style={styles.customButton}
                             >
                                 <Text style={styles.buttonText}>NHẬN NGAY</Text>
-                            </TouchableOpacity>
+                            </View>
                         </GradientWrapper>
-                    </View>
+                    </TouchableOpacity>
                 </ScrollView>
             </CustomResultGradient>
         </SafeAreaView>
@@ -270,7 +272,7 @@ const styles = StyleSheet.create({
         paddingLeft: wp('3%'),
         alignItems: 'center',
         justifyContent: 'center',
-        
+
     },
     image: {
         width: wp('24%'), //86

@@ -1,43 +1,58 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { Image } from 'expo-image';
 
 interface StepProps {
   label: string;
   active: boolean;
   stepnum: string;
+  selected: boolean;
+  confirmed: boolean;
+  selectedImage: any; // This will be the image displayed after confirmation
 }
 
-const StepCircle: React.FC<StepProps> = ({ label, active, stepnum }) => {
+const StepCircle: React.FC<StepProps> = ({ label, active, stepnum, selected, confirmed, selectedImage }) => {
   return (
     <View style={styles.stepContainer}>
       <View style={[styles.outerCircle, active ? styles.activeOuterCircle : styles.inactiveOuterCircle]}>
-        {active ? (
-          <View style={styles.innerCircle} />
+        {confirmed ? (  // Hiển thị hình ảnh nếu đã xác nhận
+          <Image contentFit="contain" source={selectedImage} style={styles.stepImage} />
         ) : (
-          <Text style={styles.stepNum}>{stepnum}</Text>
+          <>
+            {active ? <View style={styles.innerCircle} /> : <Text style={styles.stepNum}>{stepnum}</Text>}
+          </>
         )}
       </View>
-      <Text style={[styles.stepLabel, { width: wp('16.5%'), textAlign: 'center' }]}>
-        {label}
-      </Text>
+      <Text style={[styles.stepLabel, { width: wp('16.5%'), textAlign: 'center' }]}>{label}</Text>
     </View>
   );
 };
 
-const ProgressStepsComponent: React.FC = () => {
+interface ProgressStepsProps {
+  stepStates: any[]; // You can replace `any` with a type for your steps
+}
+
+const ProgressStepsComponent: React.FC<ProgressStepsProps> = ({ stepStates }) => {
   return (
     <View style={styles.stepsWrapper}>
-      <StepCircle label="Cơ" active={true} stepnum="1" />
-      <View style={styles.dashedLine} />
-      <StepCircle label="Xương" active={false} stepnum="2" />
-      <View style={styles.dashedLine} />
-      <StepCircle label="Khớp" active={false} stepnum="3" />
-      <View style={styles.dashedLine} />
-      <StepCircle label="Đề kháng" active={false} stepnum="4" />
+      {stepStates.map((step, index) => (
+        <React.Fragment key={index}>
+          <StepCircle
+            label={step.label}
+            active={step.active}
+            stepnum={(index + 1).toString()}
+            selected={step.selected}
+            confirmed={step.confirmed}
+            selectedImage={step.selectedImage}
+          />
+          {index < stepStates.length - 1 && <View style={styles.dashedLine} />}
+        </React.Fragment>
+      ))}
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   stepsWrapper: {
@@ -88,6 +103,10 @@ const styles = StyleSheet.create({
     marginHorizontal: -wp('5%'), // 4
     bottom: hp('1.4%')
   },
+  stepImage: {
+    width: wp('8.5%'),
+    height: hp('4%')
+  }
 });
 
 export default ProgressStepsComponent;
