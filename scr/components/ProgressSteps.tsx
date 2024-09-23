@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store/ConfigureStore'; // Đảm bảo import đúng store
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { Image } from 'expo-image';
 
@@ -29,11 +31,13 @@ const StepCircle: React.FC<StepProps> = ({ label, active, stepnum, selected, con
   );
 };
 
-interface ProgressStepsProps {
-  stepStates: any[]; // You can replace `any` with a type for your steps
-}
+const ProgressStepsComponent: React.FC = () => {
+  // Lấy state từ Redux store
+  const stepStates = useSelector((state: RootState) => {
+    // console.log("Step States in ProgressStepsComponent:", state.step.stepStates);
+    return state.step.stepStates;
+  });
 
-const ProgressStepsComponent: React.FC<ProgressStepsProps> = ({ stepStates }) => {
   return (
     <View style={styles.stepsWrapper}>
       {stepStates.map((step, index) => (
@@ -53,13 +57,12 @@ const ProgressStepsComponent: React.FC<ProgressStepsProps> = ({ stepStates }) =>
   );
 };
 
-
 const styles = StyleSheet.create({
   stepsWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    right: wp('2%')
+    right: wp('2%'),
   },
   stepContainer: {
     alignItems: 'center',
@@ -96,17 +99,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   dashedLine: {
-    width: wp('13%'), //14
+    width: wp('13%'),
     borderBottomWidth: 2,
     borderStyle: 'dashed',
     borderColor: '#FFFFFF',
-    marginHorizontal: -wp('5%'), // 4
-    bottom: hp('1.4%')
+    marginHorizontal: -wp('5%'),
+    bottom: hp('1.4%'),
   },
   stepImage: {
     width: wp('8.5%'),
-    height: hp('4%')
-  }
+    height: hp('4%'),
+  },
 });
 
 export default ProgressStepsComponent;

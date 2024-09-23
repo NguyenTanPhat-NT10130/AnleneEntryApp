@@ -1,36 +1,115 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Button, Alert, TouchableOpacity, ImageBackground, Modal } from 'react-native'
 import { Image } from 'expo-image';
 import { Video, ResizeMode } from 'expo-av';
 import { Icon } from 'react-native-elements';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { ScrollView } from 'react-native-virtualized-view';
-import CheckGradient from '../components/CheckGradient';
-import GradientWrapper from '../components/GradientWrapper';
+import CheckGradient from '../components/Gradient/CheckGradient';
+import GradientWrapper from '../components/Gradient/GradientWrapper';
 import ReusableScreenHeader from '../components/HeaderCheck';
 import ProgressStepsComponent from '../components/ProgressSteps';
 import { commonStyles } from '../components/styles';
-import GradientText from '../components/GradientText';
+import GradientText from '../components/Gradient/GradientText';
+import { videoResources } from '../components/resources';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/Navigation';
+import { useSelector, useDispatch } from 'react-redux';
+import { AppDispatch, RootState } from '../redux/store/ConfigureStore';
+import { setStepResult, selectStepOption, setSteps, activateNextStep, updateStepSelection } from '../redux/action/stepResultsSlice';
+import { fetchStepsFromFirestore } from '../redux/action/steps';
+import { RouteProp } from '@react-navigation/native';
+import { collection, addDoc, getDocs, onSnapshot } from 'firebase/firestore';
+import { FIRESTORE } from '../firebase/firebaseConfig';
+import { setBackground } from '../redux/action/backgroundSlice';
 
 type BodyTestScreenNavigationProp = StackNavigationProp<RootStackParamList, 'BodyTest'>;
+type BodyTestScreenRouteProp = RouteProp<RootStackParamList, 'BodyTest'>;
+
+interface StepState {
+  id: number;
+  label: string;
+  title: string;
+  active: boolean;
+  selected: boolean;
+  confirmed: boolean;
+  selectedImage: string | null;
+  videoSrc?: any;
+  description: string;
+}
 interface Props {
   navigation: BodyTestScreenNavigationProp;
-  currentStep: number;
-  stepStates: any[]; // You can replace `any` with your step state type if you have one
-  setStepStates: (steps: any[]) => void; // Function to update step states
+  route: BodyTestScreenRouteProp;
 }
 interface ModalCongratulationsProps {
   onClose: () => void; // Nhận prop onClose từ parent
   navigation: BodyTestScreenNavigationProp;
 }
 const ModalCongratulations: React.FC<ModalCongratulationsProps> = ({ onClose, navigation }) => {
-  const [showModal, setShowModal] = useState(false);
-  const handleContinue = () => {
-    onClose();  // Đóng modal
-    navigation.navigate('TestResults');  // Chuyển hướng sang trang mới
+  // Lấy stepResults từ Redux store
+  const stepResults = useSelector((state: RootState) => state.step.stepResults);
+
+  useEffect(() => {
+    console.log('stepResults updated: ', stepResults); // Lắng nghe sự thay đổi của stepResults
+  }, [stepResults]);
+  const dispatch = useDispatch();
+  const navigateBasedOnResults = () => {
+    
+    let backgroundType: 'color' | 'gradient' = 'color';
+    let backgroundColor: string | undefined;
+    let gradientColors: string[] | undefined;
+    let gradientLocations: number[] | undefined;
+
+    // Đóng modal khi điều hướng
+    onClose();
+
+    // Kiểm tra xem đã có 4 kết quả hay chưa
+    if (stepResults.length === 4) {
+      // Trường hợp nếu kết quả là [True, False, False, False]
+      if (stepResults[0] && !stepResults[1] && !stepResults[2] && !stepResults[3]) {
+        backgroundType = 'color';
+        backgroundColor = '#969696';
+      }
+      // Trường hợp nếu kết quả là [True, True, True, False]
+      else if (stepResults[0] && stepResults[1] && stepResults[2] && !stepResults[3]) {
+        backgroundType = 'gradient';
+        gradientColors = ['#FD9500', '#FEBF00', '#FB8402'];
+        gradientLocations = [0, 0.5312, 1];
+      }
+      // Trường hợp tất cả kết quả đều là True [True, True, True, True]
+      else if (stepResults.every(result => result)) {
+        backgroundType = 'gradient';
+        gradientColors = ['#0E470E', '#20680D', '#2E820D', '#13500E'];
+        gradientLocations = [0, 0.2396, 0.724, 1];
+      }
+
+      // Debug kết quả
+      console.log('backgroundType ', backgroundType);
+      console.log('backgroundColor ', backgroundColor);
+      console.log('gradientColors ', gradientColors);
+      console.log('gradientLocations ', gradientLocations);
+
+      // Cập nhật trạng thái background thông qua Redux
+      dispatch(setBackground({
+        backgroundType,
+        backgroundColor,
+        gradientColors,
+        gradientLocations
+      }));
+
+      // Điều hướng sang trang TestResults
+      navigation.navigate('TestResults', {
+        backgroundType,
+        backgroundColor,
+        gradientColors,
+        gradientLocations,
+        stepResults
+      });
+    }
   };
+
+
+
   return (
     <View style={styles.modal_container}>
       <View style={{ top: hp('2%') }}>
@@ -40,16 +119,16 @@ const ModalCongratulations: React.FC<ModalCongratulationsProps> = ({ onClose, na
           <TouchableOpacity style={styles.modal_cancel_btn}>
             <Text
               onPress={onClose}
-              style={styles.bodal_btn_text}
+              style={styles.modal_btn_text}
             >
               HỦY
             </Text>
-          </TouchableOpacity> 
-          <TouchableOpacity 
-          onPress={handleContinue}
-          style={styles.modal_continue_btn}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={navigateBasedOnResults}
+            style={styles.modal_continue_btn}
           >
-            <Text style={[styles.bodal_btn_text, { color: '#FFFFFF' }]}>TIẾP TỤC</Text>
+            <Text style={[styles.modal_btn_text, { color: '#FFFFFF' }]}>TIẾP TỤC</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -57,53 +136,99 @@ const ModalCongratulations: React.FC<ModalCongratulationsProps> = ({ onClose, na
   )
 }
 
-const BodyTest: React.FC<Props> = ({navigation ,stepStates, setStepStates }) => {
-  const textLines = [
-    { text: 'KIỂM TRA CƠ', fontSize: 18, fontWeight: '700' },
-  ];
+const BodyTest: React.FC<Props> = ({ navigation }) => {
+
   const [currentStep, setCurrentStep] = useState(0);
-  [stepStates, setStepStates] = React.useState([
-    { label: 'Cơ', active: true, selected: false, confirmed: false, selectedImage: null, videoSrc: require('../../assets/Video_co.mp4'), description: 'Thẳng lưng trước ghế, đứng lên ngồi xuống 5 lần từ 6-10 giây' },
-    { label: 'Xương', active: false, selected: false, confirmed: false, selectedImage: null, videoSrc: require('../../assets/Video_xuong.mp4'), description: 'Duỗi 2 tay về phía trước, từ từ cúi xuống để chạm vào mũi bàn chân' },
-    { label: 'Khớp', active: false, selected: false, confirmed: false, selectedImage: null, videoSrc: require('../../assets/Video_khop.mp4'), description: 'Đứng rộng chân, lưng thẳng đứng, tay đưa ra sau và đan vào nhau' },
-    { label: 'Đề kháng', active: false, selected: false, confirmed: false, selectedImage: null, description: '6 tháng gần đây, bạn có gặp các triệu chứng: ho, sổ mũi, cảm sốt?' },
+
+  const dispatch: AppDispatch = useDispatch(); // Sử dụng kiểu AppDispatch
+  const stepStates = useSelector((state: RootState) => state.step.stepStates);
+  const [textLines, setTextLines] = useState([
+    { text: 'Loading...', fontSize: 18, fontWeight: '700' },
   ]);
+  useEffect(() => {
+    setCurrentStep(0);
+    // Dispatch action để lấy dữ liệu từ Firestore
+    dispatch(fetchStepsFromFirestore());
+
+    // Quản lý listener trực tiếp trong useEffect
+    const stepCollectionRef = collection(FIRESTORE, 'Step');
+    const unsubscribe = onSnapshot(stepCollectionRef, (snapshot) => {
+      // Xử lý snapshot tại đây nếu cần
+      console.log('Real-time data from Firestore:', snapshot.docs.map(doc => doc.data()));
+    });
+
+    // Hủy listener khi component unmount
+    return () => unsubscribe();
+  }, [dispatch]);
+
+
   const [selectedOption, setSelectedOption] = React.useState<'yes' | 'no' | null>(null);
   const [confirmButtonColor, setConfirmButtonColor] = React.useState('#B8B8B8'); // Màu mặc định cho nút xác nhận
-  const [showModal, setShowModal] = useState(false); 
+  const [showModal, setShowModal] = useState(false);
+
+
   const handleSelect = (option: 'yes' | 'no') => {
     setSelectedOption(option);
     console.log('option', option);
-    // Update stepStates
-    const updatedSteps = [...stepStates];
-    const selectedImage = option === 'yes' ? require('../../assets/yes_step.png') : require('../../assets/no_step.png');
 
-    updatedSteps[currentStep] = { ...updatedSteps[currentStep], selected: true, selectedImage };
-    setStepStates(updatedSteps);
+    // Chọn hình ảnh tương ứng dựa trên lựa chọn của người dùng
+    const selectedImage = option === 'yes'
+      ? require('../../assets/yes_step.png') // Hình ảnh cho Yes
+      : require('../../assets/no_step.png'); // Hình ảnh cho No
+    dispatch(updateStepSelection({ stepIndex: currentStep, selectedImage }));
+    console.log('selectedImage ', selectedImage);
+    console.log('currentStep ', currentStep);
   };
 
+
+  useEffect(() => {
+    if (stepStates.length > 0 && currentStep === 0) {
+      // Cập nhật textLines khi stepStates có dữ liệu
+      setTextLines([{ text: stepStates[0].title, fontSize: 18, fontWeight: '700' }]);
+    }
+    console.log('Current step has changed: ', currentStep);
+    console.log('Step state for current step: ', stepStates[currentStep]);
+  }, [currentStep, stepStates]);
 
   const handleConfirm = () => {
     if (!selectedOption) return;
 
-    const updatedSteps = [...stepStates];
-    updatedSteps[currentStep] = { ...updatedSteps[currentStep], confirmed: true };
+    // Xác định kết quả `true` hoặc `false` dựa trên `selectedOption`
+    const result = selectedOption === 'yes';
 
-    if (currentStep < updatedSteps.length - 1) {
-      updatedSteps[currentStep + 1].active = true;
+    // Dispatch để cập nhật kết quả (result) nhưng luôn cập nhật confirmed = true
+    dispatch(setStepResult({ stepIndex: currentStep, result }));  // Kết quả dựa vào lựa chọn
+
+    // Sau khi xác nhận, cập nhật hình ảnh cho step hiện tại
+    const selectedImage = result
+      ? require('../../assets/yes_step.png')
+      : require('../../assets/no_step.png');
+
+    // Dispatch cập nhật hình ảnh sau khi bước đã được xác nhận 
+    dispatch(updateStepSelection({ stepIndex: currentStep, selectedImage }));
+
+    // Nếu còn bước tiếp theo, di chuyển sang bước tiếp theo
+    if (currentStep < stepStates.length - 1) {
+      dispatch(activateNextStep(currentStep + 1));
+
+      // Cập nhật bước hiện tại và reset lựa chọn
       setCurrentStep(currentStep + 1);
-      setSelectedOption(null); // Reset lựa chọn cho bước tiếp theo
+      setSelectedOption(null);
+      setTextLines([{ text: stepStates[currentStep + 1].title, fontSize: 18, fontWeight: '700' }]);
+      console.log("current title: ", stepStates[currentStep + 1].title);
     } else {
-      // Bước cuối cùng, đổi màu background nút và hiển thị thông báo hoàn thành
+      // Khi hoàn thành tất cả các bước
       setConfirmButtonColor('#B70002');
       setShowModal(true);
     }
-
-    setStepStates(updatedSteps);
   };
+
+
   const handleCloseModal = () => {
     setShowModal(false);
   };
+
+
   const handlePressLeft = () => {
     Alert.alert('Button pressed!');
   };
@@ -134,7 +259,7 @@ const BodyTest: React.FC<Props> = ({navigation ,stepStates, setStepStates }) => 
         </View>
         <Text style={styles.title}>KIỂM TRA CƠ - XƯƠNG - KHỚP</Text>
         <View style={styles.progressStepsContainer}>
-          <ProgressStepsComponent stepStates={stepStates} />
+          <ProgressStepsComponent />
         </View>
         <View style={styles.gradientText_container}>
           <GradientText textLines={textLines} />
@@ -151,26 +276,37 @@ const BodyTest: React.FC<Props> = ({navigation ,stepStates, setStepStates }) => 
               ]}
             >
 
-              <Video
-                source={stepStates[currentStep].videoSrc} // Đường dẫn tới video trong thư mục dự án
-                rate={3.5}
-                volume={1.0}
-                isMuted={true}
-                resizeMode={ResizeMode.COVER}
-                shouldPlay
-                isLooping
-                style={styles.check_image}
-              />
+              {
+                stepStates.length > 0 && stepStates[currentStep] && stepStates[currentStep].label ? (
+                  <Video
+                    source={{ uri: stepStates[currentStep].videoSrc }}
+                    // source={videoResources[stepStates[currentStep].label]} // Đường dẫn tới video
+                    rate={1.0}
+                    volume={1.0}
+                    isMuted={true}
+                    resizeMode={ResizeMode.COVER}
+                    shouldPlay
+                    isLooping
+                    style={styles.check_image}
+                  />
+                ) : (
+                  <Text>Video is loading or unavailable</Text> // Thông báo khi video chưa có
+                )
+              }
+
             </View>
           ) : (
             <View
               style={[
                 styles.check_image_container,
-                selectedOption && styles.selected_video_border, // Highlight when an option is selected
+                selectedOption === 'yes' && { borderColor: '#73A442', borderWidth: 3 }, // Xanh lá khi chọn 'yes'
+                selectedOption === 'no' && { borderColor: '#C6463A', borderWidth: 3 }, // Đỏ khi chọn 'no'
+                !selectedOption && { borderColor: 'transparent', borderWidth: 0 }, // Không có border khi không có lựa chọn
               ]}
             >
               <Image
-                source={require('../../assets/image_Dekhang.png')}
+                source={{ uri: stepStates[currentStep].videoSrc }}
+                // source={require('../../assets/image_Dekhang.png')}
                 style={[styles.check_image, { width: wp('88%'), height: hp('42%'), right: wp('0%') }]}
               />
             </View>
@@ -193,7 +329,16 @@ const BodyTest: React.FC<Props> = ({navigation ,stepStates, setStepStates }) => 
           )}
         </View>
 
-        <Text style={styles.checkText_content}>{stepStates[currentStep].description}</Text>
+        {
+          stepStates.length > 0 && stepStates[currentStep] && stepStates[currentStep].description ? (
+            <Text style={styles.checkText_content}>
+              {stepStates[currentStep].description}
+            </Text>
+          ) : (
+            <Text>Description is loading or unavailable</Text> // Thông báo khi description chưa có
+          )
+        }
+
         <View style={styles.check_container}>
           {/* Lựa chọn 'Yes' */}
           {selectedOption === 'yes' && styles.selected_box ? (
@@ -204,7 +349,7 @@ const BodyTest: React.FC<Props> = ({navigation ,stepStates, setStepStates }) => 
                   style={styles.image_icon}
                   contentFit="contain"
                 />
-                <Text style={styles.check_text}>Được</Text>
+                <Text style={styles.check_text}>{isLastStep ? 'Hiếm khi' : 'Được'}</Text>
               </TouchableOpacity>
             </GradientWrapper>
           ) : (
@@ -238,12 +383,11 @@ const BodyTest: React.FC<Props> = ({navigation ,stepStates, setStepStates }) => 
                 style={styles.image_icon}
                 contentFit="contain"
               />
-              <Text style={styles.check_text}>Không được</Text>
+              <Text style={styles.check_text}>{isLastStep ? 'Nhiều lần' : 'Không được'}</Text>
             </TouchableOpacity>
           )}
         </View>
         <TouchableOpacity
-          
           onPress={() => handleConfirm()}
           disabled={!selectedOption}
           style={[styles.confirm_btn, { backgroundColor: confirmButtonColor }]}
@@ -256,10 +400,10 @@ const BodyTest: React.FC<Props> = ({navigation ,stepStates, setStepStates }) => 
         visible={showModal}
         transparent={true}
         animationType="fade"
-        onRequestClose={handleCloseModal} 
+        onRequestClose={handleCloseModal}
       >
         <View style={styles.modal_wrap}>
-          <ModalCongratulations onClose={handleCloseModal} navigation={navigation}/>
+          <ModalCongratulations onClose={handleCloseModal} navigation={navigation} />
         </View>
 
       </Modal>
@@ -434,7 +578,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
-  bodal_btn_text: {
+  modal_btn_text: {
     fontFamily: 'SVN-Gotham Bold',
     fontWeight: '700',
     fontSize: 16,

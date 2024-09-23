@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleProp, ViewStyle} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { commonStyles } from './styles';
+import { commonStyles } from '../styles';
 interface CustomResultGradientProps {
     backgroundType: 'color' | 'gradient'; // Kiểu màu nền: đơn sắc hoặc gradient
     backgroundColor?: string; // Màu nền đơn sắc

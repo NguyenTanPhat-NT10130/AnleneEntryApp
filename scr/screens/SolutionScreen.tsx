@@ -1,23 +1,36 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity, ImageBackground, Image, TextInput, SafeAreaView, Animated, LayoutAnimation } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { ScrollView } from 'react-native-virtualized-view';
 import ReusableScreenHeader from '../components/HeaderCheck';
-import CustomResultGradient from '../components/CustomResultsGradient';
-import GradientWrapper from '../components/GradientWrapper';
+import CustomResultGradient from '../components/Gradient/CustomResultsGradient';
+import GradientWrapper from '../components/Gradient/GradientWrapper';
+import CustomTextGradient from '../components/Gradient/CustomTextGradient';
 import { commonStyles } from '../components/styles';
 import WarningGradient from '../components/WarningGradient';
+import GradientTextWithShadow from '../components/Gradient/GradientTextWithShadow';
 import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Text as SvgText, TSpan } from 'react-native-svg';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/Navigation';
+import { RootState, AppDispatch } from '../redux/store/ConfigureStore';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchSolutionStepsFromFirestore } from '../redux/action/steps';
+import { evaluateStepResults } from '../utils/evaluateStepResults';
+import caseSolutionConfig from '../components/resources';
 
 type SolutionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Solution'>;
-
 type Props = {
     navigation: SolutionScreenNavigationProp;
 };
 
 const Solution: React.FC<Props> = ({ navigation }) => {
+    const dispatch: AppDispatch = useDispatch();
+    const { backgroundType, backgroundColor, gradientColors, gradientLocations } = useSelector(
+        (state: RootState) => state.background
+    );
+
+    const stepResults = useSelector((state: RootState) => state.step.stepResults);
+    console.log('Received params:', backgroundType, backgroundColor, gradientColors, gradientLocations, stepResults);
     const [isExpanded, setIsExpanded] = useState(false);
     const animation = useRef(new Animated.Value(0)).current;
     const handlePresstExpanded = () => {
@@ -43,6 +56,43 @@ const Solution: React.FC<Props> = ({ navigation }) => {
         inputRange: [0, 8],
         outputRange: [0, 500], // Chiều cao tối đa của đoạn text đầy đủ (tùy chỉnh)
     });
+
+    useEffect(() => {
+        dispatch(fetchSolutionStepsFromFirestore());
+    }, [dispatch]);
+
+    const solutionSteps = useSelector((state: RootState) => state.step.solutionSteps);
+
+    const evaluate = evaluateStepResults(stepResults);
+
+    // Áp dụng điều kiện dựa trên stepResults để thay đổi nội dung và màu sắc
+    const config = caseSolutionConfig(solutionSteps);
+    let finalConfig;
+
+    switch (evaluate) {
+        case 'dangerous':
+            finalConfig = config.case1;
+            break;
+        case 'safe':
+            finalConfig = config.case2;
+            break;
+        case 'good':
+            finalConfig = config.case3;
+            break;
+        default:
+            // Cung cấp giá trị mặc định nếu không có case nào khớp
+            finalConfig = {
+                firstResultText: { text: "Đang tải...", type: 'color', color: '#000000' },
+                secondResultText: { text: "Đang tải...", type: 'color', color: '#000000' },
+                contentText: "Đang tải...",
+                borderType: 'color',
+                validaText: { type: 'color', color: '#000000' },
+                borderColor: '#000000',
+                gradientColors: [],
+                gradientLocations: []
+            };
+            break;
+    }
     const handlePressLeft = () => {
         Alert.alert('Button pressed!');
     };
@@ -56,12 +106,14 @@ const Solution: React.FC<Props> = ({ navigation }) => {
         <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
 
             <CustomResultGradient
-                backgroundType="color"
-                backgroundColor="#969696"
+                backgroundType={backgroundType}
+                backgroundColor={backgroundColor}
+                gradientColors={gradientColors}
+                gradientLocations={gradientLocations}
                 style={commonStyles.linearGradient}
             >
                 <ScrollView>
-                    <View style={[commonStyles.header, { marginBottom: hp('-1%') }, isExpanded && { marginBottom: hp('6%') }]}>
+                    <View style={[commonStyles.header, { bottom: hp('95%') }, isExpanded && { bottom: hp('104%') }]}>
                         <ReusableScreenHeader
                             currentPage="4"
                             totalPages="6"
@@ -74,18 +126,28 @@ const Solution: React.FC<Props> = ({ navigation }) => {
                         />
                     </View>
 
-                    <View style={{ /*bottom: hp('2.5%'), 7*/ marginBottom: hp('7%'), alignItems: 'center', }}>
-                        <Image
-                            source={require('../../assets/logo.png')}
-                            style={styles.logo}
-                            resizeMode="contain"
-                        />
+                    <View style={{ /*bottom: hp('2.5%'), 7*/ bottom: hp('1%'), alignItems: 'center', }}>
+                        <View style={{ marginTop: 12 }}>
+                            <Image
+                                source={require('../../assets/logo.png')}
+                                style={styles.logo}
+                                resizeMode="contain"
+                            />
+                        </View>
                         <View style={styles.warning_box}>
-                            <Text style={styles.warning_text}>
-                                HÃY CẨN THẬN!
-                            </Text>
-                            <Text style={[styles.warning_contenttext, { /*top: hp('3%')*/ marginTop: hp('0%') }]}>
-                                Tuy rằng có vẻ bạn đang có đề kháng tốt nhưng cần quan tâm đến hệ vận động nhiều hơn nhé, bởi sau tuổi 40, sức khoẻ Cơ-Xương-Khớp{'         '}suy giảm:
+                            <View style={{ top: hp('-5%') }}>
+                                <CustomTextGradient
+                                    textType={finalConfig.title.type}
+                                    color={finalConfig.title.color || []}
+                                    gradientColors={finalConfig.title.gradientColors || []}
+                                    x='150'
+                                    y='50'
+                                >
+                                    {finalConfig.title.text}
+                                </CustomTextGradient>
+                            </View>
+                            <Text style={[styles.warning_contenttext, { /*top: hp('3%')*/ top: hp('-10%') }]}>
+                                {finalConfig.firstSolutionText}
                             </Text>
                         </View>
                         <View style={styles.image_wrapp}>
@@ -126,7 +188,7 @@ const Solution: React.FC<Props> = ({ navigation }) => {
                                 </WarningGradient>
                             </View>
                         </View>
-                        <View style={{ /*top: hp('6%'), marginTop 1, 48*/ marginTop: hp('48%'), position: 'absolute' }}>
+                        <View style={{ /*top: hp('6%'), marginTop 1, 48*/ top: hp('-9%') /*, position: 'absolute'*/ }}>
                             <Text style={[
                                 styles.warning_contenttext,
                                 {
@@ -135,9 +197,10 @@ const Solution: React.FC<Props> = ({ navigation }) => {
                                     paddingHorizontal: wp('11%')// 8.8
                                 }
                             ]}>
-                                Bạn có thể sẽ phải đối mặt với những cơn đau nhức mỏi thường xuyên, gây khó khăn trong vận động và sinh hoạt hằng ngày.
+                                {finalConfig.secondSolutionText}
                             </Text>
                         </View>
+
                         <View style={styles.product_image_container}>
                             <Image
                                 source={require('../../assets/product_image.png')}
@@ -151,44 +214,23 @@ const Solution: React.FC<Props> = ({ navigation }) => {
                         </View>
                         <View style={styles.bottom_container}>
                             <View style={styles.bottom_gradient_text}>
-                                <Svg height="55" width="300">
-                                    <Defs>
-                                        <SvgLinearGradient id="grad" x1="110%" y1="0%" x2="50%" y2="0%">
-                                            <Stop offset="1.14%" stopColor="#FFC200" />
-                                            <Stop offset="12.88%" stopColor="#FFFCAB" />
-                                            <Stop offset="49.11%" stopColor="#ECD24A" />
-                                            <Stop offset="86.36%" stopColor="#ECD24A" />
-                                            <Stop offset="99.12%" stopColor="#FFC200" />
-                                        </SvgLinearGradient>
-                                    </Defs>
-                                    <SvgText
-                                        x="50%"
-                                        y="50"
-                                        fill="black"
-                                        fontSize="13"
-                                        fontWeight="700"
-                                        textAnchor="middle"
-                                        opacity="0.2" // Độ mờ của bóng
-                                        dy="2" // Đẩy bóng ra ngoài
-                                    >
-                                        LỰA CHỌN GIÚP CƠ-XƯƠNG-KHỚP CHẮC KHOẺ
+                                <GradientTextWithShadow
+                                    gradientColors={finalConfig.gradientColors || []}
+                                    fontSize={13}
+                                    fontWeight="700"
+                                    shadowColor="black"
+                                    shadowOpacity={0.2}
+                                    shadowDy={2}
+                                    x="50%"
+                                    y="50"
+                                >
+                                    LỰA CHỌN GIÚP CƠ-XƯƠNG-KHỚP CHẮC KHOẺ
+                                </GradientTextWithShadow>
 
-                                    </SvgText>
-                                    <SvgText
-                                        x="50%"
-                                        y="50"
-                                        fill="url(#grad)"
-                                        fontSize="13"
-                                        fontWeight="700"
-                                        textAnchor="middle"
-                                    >
-                                        LỰA CHỌN GIÚP CƠ-XƯƠNG-KHỚP CHẮC KHOẺ
-                                    </SvgText>
-                                </Svg>
                             </View>
                             <View style={[styles.bottom_box, isExpanded && styles.expanded_bottom_box]}>
                                 <Text style={styles.bottom_text}>
-                                    Đừng chậm trễ, cùng Anlene giúp bạn chăm sóc sức khoẻ Cơ-Xương-Khớp ngay hôm nay với Ưu đãi hấp dẫn đang chờ bạn!
+                                    {finalConfig.adviceText}
                                 </Text>
                                 {isExpanded ? (
                                     <Animated.View style={{ maxHeight, marginTop: hp('0%') }}>
@@ -232,14 +274,14 @@ const styles = StyleSheet.create({
         height: hp('6%'), //33
         // top: hp('3%'),
         marginTop: hp('6%'), // 6
-        position: 'absolute'
+        // position: 'absolute'
     },
     warning_box:
     {
         justifyContent: 'center',
         alignItems: 'center',
-        position: 'absolute',
-        marginTop: hp('12%') // 10
+        // position: 'absolute',
+        marginTop: hp('2%'), // 10
     },
     warning_text: {
         color: '#DF1E13',
@@ -248,7 +290,7 @@ const styles = StyleSheet.create({
         lineHeight: 36,
         fontWeight: '700',
         // top: hp('3%')
-        marginBottom: hp('0%')
+        marginBottom: hp('%')
     },
     warning_contenttext: {
         color: '#FFFFFF',
@@ -257,13 +299,13 @@ const styles = StyleSheet.create({
         fontSize: 13,
         lineHeight: 17.49, // 17.49
         fontWeight: '500',
-        paddingHorizontal: wp('15%'),// 11.4
+        paddingHorizontal: wp('11.4%'),// 11.4
     },
     image_wrapp: {
         flexDirection: 'row',
         width: '100%',
         // top: hp('5%')
-        marginTop: hp('28%'), // 1, 28
+        top: hp('-9.7%'), // 1, 28
         // position: 'absolute',
 
 
@@ -304,8 +346,8 @@ const styles = StyleSheet.create({
         // top: hp('6%'),
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'absolute',
-        marginTop: hp('53%') // 44
+        // position: 'absolute',
+        bottom: hp('10%') // 44
     },
     product_image: {
         width: 282,
@@ -315,7 +357,7 @@ const styles = StyleSheet.create({
         width: 189,
         height: 26.87,
         // bottom: hp('2%')
-        marginTop: hp('-2%')// -2
+        top: hp('-2%')// -2
 
     },
     first_note_text: {
@@ -338,7 +380,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         // top: hp('1%')
-        marginTop: hp('29%')// -4, 61.5
+        bottom: hp('15%')// -4, 61.5
 
     },
     bottom_gradient_text: {
@@ -384,7 +426,7 @@ const styles = StyleSheet.create({
         // position: 'absolute',
         // top: hp('93%'), // 93, top
         width: wp('40%'),
-        marginTop: hp('-7%'),// -7, -15
+        top: hp('-13%'),// -7, -15
         shadowColor: '#00000040',  // Màu shadow với opacity 25%
         shadowOffset: { width: 1.16, height: 1.16 },  // Độ lệch của shadow
         shadowOpacity: 1,  // Độ mờ của shadow
@@ -396,7 +438,7 @@ const styles = StyleSheet.create({
         // position: 'absolute',
         // top: hp('93%'), // 93, top
         width: wp('40%'),
-        marginTop: hp('-2%'),// -2
+        marginTop: hp('6%'),// -2
         shadowColor: '#00000040',  // Màu shadow với opacity 25%
         shadowOffset: { width: 1.16, height: 1.16 },  // Độ lệch của shadow
         shadowOpacity: 1,  // Độ mờ của shadow

@@ -4,12 +4,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { ScrollView } from 'react-native-virtualized-view';
 import ReusableScreenHeader from '../components/HeaderCheck';
-import GradientBorder from '../components/BorderGradient';
-import CustomResultGradient from '../components/CustomResultsGradient';
-import GradientWrapper from '../components/GradientWrapper';
+import GradientBorder from '../components/Gradient/BorderGradient';
+import CustomResultGradient from '../components/Gradient/CustomResultsGradient';
+import GradientWrapper from '../components/Gradient/GradientWrapper';
 import { commonStyles } from '../components/styles';
 import WarningGradient from '../components/WarningGradient';
-import CheckGradient from '../components/CheckGradient';
+import CheckGradient from '../components/Gradient/CheckGradient';
 const splitTextIntoLines = (text: string, maxCharsPerLineArray: number[]): string[] => {
     const words: string[] = text.split(' '); // Mảng các từ từ đoạn văn bản
     const lines: string[] = []; // Mảng chứa các dòng đã được tách

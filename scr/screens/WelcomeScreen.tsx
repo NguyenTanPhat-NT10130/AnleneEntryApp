@@ -3,10 +3,10 @@ import { View, Text, StyleSheet, Button, Alert, TouchableOpacity, ImageBackgroun
 import { Icon } from 'react-native-elements';
 import { LinearGradient } from 'expo-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import GradientWrapper from '../components/GradientWrapper';
-import GradientBorder from '../components/BorderGradient';
+import GradientWrapper from '../components/Gradient/GradientWrapper';
+import GradientBorder from '../components/Gradient/BorderGradient';
 import ReusableHeader from '../components/HeaderHome';
-import GradientText from '../components/GradientText';
+import GradientText from '../components/Gradient/GradientText';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/Navigation';
 import { commonStyles } from '../components/styles';
@@ -41,6 +41,10 @@ const Welcome: React.FC<Props> = ({ navigation }) => {
 
   if (!fontsLoaded) {
     return null; // Hoặc một màn hình loading nào đó
+  }
+  const handleNavigation = () => {
+    navigation.navigate('BodyTest');
+    console.log('Naviagtion');
   }
   const handlePress = () => {
     Alert.alert('Button pressed!');
@@ -108,7 +112,7 @@ const Welcome: React.FC<Props> = ({ navigation }) => {
         />
       </View>
       <TouchableOpacity
-        onPress={() => navigation.navigate('BodyTest')}
+        onPress={() => handleNavigation()} 
         style={{ position: 'absolute' }}
       >
         <GradientWrapper borderWidth={1.5} borderRadius={30.24} style={styles.button_wrap}>
